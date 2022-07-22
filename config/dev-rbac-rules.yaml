@@ -1,0 +1,51 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dev-permit-app-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-viewer
+subjects:
+  - kind: Group
+    name: GROUP-FOR-APP-VIEWER
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: YOUR-NAMESPACE-permit-app-viewer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-viewer-cluster-access
+subjects:
+  - kind: Group
+    name: GROUP-FOR-APP-VIEWER
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dev-permit-app-editor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-editor
+subjects:
+  - kind: Group
+    name: GROUP-FOR-APP-EDITOR
+    apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: YOUR-NAMESPACE-permit-app-editor
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: app-editor-cluster-access
+subjects:
+  - kind: Group
+    name: GROUP-FOR-APP-EDITOR
+    apiGroup: rbac.authorization.k8s.io

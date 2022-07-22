@@ -1,14 +1,15 @@
-.gradle
-/build/
+# Local .ignore directories
+**/.ignore/*
 
-# Ignore Gradle GUI config
-gradle-app.setting
+**/archive*/
+**/gui/*
 
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-!gradle-wrapper.jar
+bin/
+cli/
 
-# Cache of project
-.gradletasknamecache
+# files
+crash.log
+*.tfstate
+*.tfstate.*
 
-# # Work around https://youtrack.jetbrains.com/issue/IDEA-116898
-# gradle/wrapper/gradle-wrapper.properties
+tap-install-values-processed.yaml

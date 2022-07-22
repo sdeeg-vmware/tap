@@ -1,0 +1,56 @@
+app_config:
+  app:
+    baseUrl: http://${var.backstage_url}
+  backend:
+    baseUrl: http://${var.backstage_url}
+    cors:
+      origin: http://${var.backstage_url}
+    database:
+      client: pg
+      connection:
+        user: ${var.db_username}
+        password: ${var.db_password}
+        host: ${var.db_host}
+        port: ${var.db_port}
+        ssl: {rejectUnauthorized: false}
+  integrations:
+    gitlab:
+      - host: gitlab.eng.vmware.com
+        token: ${var.gitlab_token}
+        apiBaseUrl: https://gitlab.eng.vmware.com/api/v4
+  proxy:
+    '/gitlabci':
+      target: 'https://gitlab.eng.vmware.com/api/v4'
+      allowedMethods: ['GET']
+      headers:
+        PRIVATE-TOKEN: ${var.gitlab_token}
+  techdocs:
+    builder: 'external'
+    generator:
+      runIn: 'docker'
+    publisher:
+      type: 'awsS3'
+      awsS3:
+        bucketName: 'tapgui-techdocs'
+        credentials:
+          accessKeyId: ${var.s3_tapgui_techdocs_access_key_id}
+          secretAccessKey: ${var.s3_tapgui_techdocs_secret_access_key}
+        region: 'us-east-1'
+        s3ForcePathStyle: false
+  catalog:
+    locations:
+      - type: url
+        target: https://gitlab.eng.vmware.com/project-star/pstar-backstage-poc/-/blob/master/sample-catalogs/demo/catalog-info.yaml
+  auth:
+    environment: development
+    session:
+      secret: custom session secret
+    providers:
+      oidc:
+        development:
+          metadataUrl: https://gitlab.eng.vmware.com/.well-known/openid-configuration
+          clientId: ${var.oidc_client_id}
+          clientSecret: ${var.oidc_client_secret}
+          tokenSignedResponseAlg: RS256
+          scope: openid profile email
+          prompt: auto

@@ -1,0 +1,1 @@
+kubectl get cct,cd,cdt,cit,crt,cst,csc,ct,dlv,run,wld
