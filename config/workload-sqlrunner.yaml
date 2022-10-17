@@ -1,56 +1,15 @@
 apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
+  name: sqlrunner
+  namespace: development
   labels:
     app.kubernetes.io/part-of: sqlrunner
     apps.tanzu.vmware.com/workload-type: web
-  name: sqlrunner
-  namespace: default
 spec:
-  source:
-    git:
-      ref:
-        branch: main
-      url: https://github.com/sdeeg-vmware/sqlrunner.git
-  resources:
-  - name: source-provider
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterSourceTemplate
-      name: source-template
-  - name: deliverable
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterTemplate
-      name: deliverable-template
-  - inputs:
-    - name: source-provider
-    name: image-builder
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterImageTemplate
-      name: kpack-template
-  - inputs:
-    - name: image-builder
-    name: config-provider
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterConfigTemplate
-      name: convention-template
-  - inputs:
-    - name: config-provider
-    name: app-config
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterConfigTemplate
-      name: config-template
-  - inputs:
-    - name: app-config
-    name: config-writer
-    templateRef:
-      apiVersion: carto.run/v1alpha1
-      kind: ClusterTemplate
-      name: config-writer-template
-  supplyChainRef:
-    kind: ClusterSupplyChain
-    name: source-to-url
+  image: registry.planet10.lab/apps/sqlrunner:1.0
+  # source:
+  #   git:
+  #     ref:
+  #       branch: main
+  #     url: https://github.com/sdeeg-vmware/sqlrunner.git

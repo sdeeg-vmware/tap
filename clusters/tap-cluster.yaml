@@ -8,7 +8,7 @@ spec:
     controlPlane:
       replicas: 1
       vmClass: best-effort-medium
-      storageClass: k8s-gold-storage-policy
+      storageClass: k8s-storage-policy
       tkr:  
         reference:
           name: v1.22.9---vmware.1-tkg.1.cc71bc8
@@ -16,7 +16,7 @@ spec:
     - name: tap-worker-nodepool-a1
       replicas: 4
       vmClass: best-effort-large
-      storageClass: k8s-gold-storage-policy
+      storageClass: k8s-storage-policy
       volumes:
         - name: containerd
           mountPath: /var/lib/containerd
@@ -27,7 +27,7 @@ spec:
           name: v1.22.9---vmware.1-tkg.1.cc71bc8
   settings:
     storage:
-      defaultClass: k8s-gold-storage-policy
+      defaultClass: k8s-storage-policy
     network:
       cni:
         name: antrea

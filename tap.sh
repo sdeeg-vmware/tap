@@ -2,26 +2,32 @@
 
 #######  Environment
 
-export TAP_VERSION=1.2.0
+export TAP_VERSION=1.3.0
 
-#set the path to use the tap binaries
-#export PATH=$HOME/tap/bin:$PATH
+export TAP_DIR=$HOME/tap
+#export PATH=$TAP_DIR/bin:$PATH
+TEMP=$TAP_DIR/tmp
 
 export SECRETS_HOME=$HOME/.sekrits
 export TANZU_NET_CREDS=tanzunet_creds.yaml
 source $SECRETS_HOME/TanzuNet_creds  # TODO: Eliminate with ytt
 
 # Use these settings with installing from a local repository
-export INSTALL_REGISTRY_HOSTNAME=registry20.planet10.lab
+export INSTALL_REGISTRY_HOSTNAME=registry.planet10.lab
 export INSTALL_REGISTRY_USERNAME=tanzu
 export INSTALL_REGISTRY_PASSWORD=Tanzu1!!
 export TARGET_REPOSITORY=tap/tap-packages
 
-# Use these setting when installing fromm TanzuNet
-#export INSTALL_REGISTRY_HOSTNAME=registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
-#export INSTALL_REGISTRY_USERNAME=
-#export INSTALL_REGISTRY_PASSWORD=
+# Developer settings.
+export REGISTRY_SERVER=registry.planet10.lab
+export REGISTRY_USERNAME=tanzu
+export REGISTRY_PASSWORD=Tanzu1!!
+export DEV_NAMESPACE=development
 
+# Use these setting when installing fromm TanzuNet
+# export INSTALL_REGISTRY_HOSTNAME=registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
+# export INSTALL_REGISTRY_USERNAME=$TANZU_NET_USER
+# export INSTALL_REGISTRY_PASSWORD=$TANZU_NET_PASSWORD
 
 #weird setting for the tanzu cli (if everyone's supposed to do it, why isn't it the default?)
 export TANZU_CLI_NO_INIT=true
@@ -29,7 +35,7 @@ export TANZU_CLI_NO_INIT=true
 export TANZU_CLI_HOME=$HOME/tanzu
 export TKG_UTIL=$HOME/tkg
 
-export VALUES_FILE=config/tap-cluster-values.yaml
+export VALUES_FILE=config/tap-values-1.3.yaml
 
 export TAP_CLUSTER_NAME=tap-cluster
 
@@ -93,6 +99,9 @@ function install-tanzu-cli() {
     else
         echo "sudo install $TANZU_CLI_HOME/cli/core/$version/tanzu-core-linux_amd64 /usr/local/bin/tanzu"
     fi
+
+    #Install plugins
+    #tanzu plugin install --local $TANZU_CLI_HOME/cli all
 }
 
 # tanzu secret registry add tap-registry \
@@ -106,8 +115,8 @@ function create-tap-registry-secret() {
         --export-to-all-namespaces --yes --namespace tap-install    
 }
 
-function create-registry20-secret() {
-    tanzu secret registry add registry20-secret \
+function create-registry-secret() {
+    tanzu secret registry add registry-secret \
         --username ${INSTALL_REGISTRY_USERNAME} --password ${INSTALL_REGISTRY_PASSWORD} \
         --server ${INSTALL_REGISTRY_HOSTNAME} \
         --export-to-all-namespaces --yes --namespace tap-install
@@ -119,28 +128,12 @@ function install-package-repo() {
         --namespace tap-install
 }
 
-# This create adds the carvel annotation
-# function create-tap-registry-secret() {
-# cat <<EOF | kubectl -n tap-install apply -f -
-# apiVersion: v1
-# kind: Secret
-# metadata:
-#   name: tap-registry
-#   annotations:
-#     secretgen.carvel.dev/image-pull-secret: ""
-# type: kubernetes.io/dockerconfigjson
-# data:
-#   .dockerconfigjson: e30K
-# EOF
-# }
-
 # Setup a newly created ${TAP_CLUSTER_NAME}
 function setup_tap() {
     echo "Setting up for the tap install"
     kubectl create ns tap-install
     kubectl create ns grype
-    #create-tap-registry-secret
-    create-registry20-secret
+    create-registry-secret
     install-package-repo
 }
 
@@ -164,7 +157,10 @@ case $1 in
         ;;
 
     reclocate-images | ri )
-        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}
+        echo $(imgpkg --version | grep version)
+        RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}"
+        echo $RELOCATE_COMMAND
+        exec $RELOCATE_COMMAND
         exit 1
         ;;
     
@@ -182,6 +178,7 @@ case $1 in
         ;;
 esac
 
+# Validate the env is ready before trying to do any of the following actions
 validate-tap-env
 
 # TAP LCM
@@ -194,15 +191,22 @@ case $1 in
     install )
         echo "Installing TAP (version: ${TAP_VERSION})"
         echo "tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file ${VALUES_FILE} -n tap-install"
-        rm tap-install-values-processed.yaml
-        ytt -f ${VALUES_FILE} -f ${SECRETS_HOME}/${TANZU_NET_CREDS} > tap-install-values-processed.yaml
-        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file tap-install-values-processed.yaml
+        rm ${TEMP}/tap-install-values-processed.yaml
+        ytt -f ${VALUES_FILE} -f ${SECRETS_HOME}/${TANZU_NET_CREDS} > ${TEMP}/tap-install-values-processed.yaml
+        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${TEMP}/tap-install-values-processed.yaml
+        ;;
+
+    post-install-config | pic )
+        echo "Create the dev environment: namespace=${DEV_NAMESPACE}"
+        kubectl create ns ${DEV_NAMESPACE}
+        tanzu secret registry add registry-credentials --server ${REGISTRY_SERVER} --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD} --namespace ${DEV_NAMESPACE}
+        kubectl apply -f config/dev-namespace-setup.yaml -n ${DEV_NAMESPACE}
         ;;
 
     update )
-        rm tap-install-values-processed.yaml
-        ytt -f ${VALUES_FILE} -f ${SECRETS_HOME}/${TANZU_NET_CREDS} > tap-install-values-processed.yaml
-        tanzu package installed update tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file tap-install-values-processed.yaml -n tap-install
+        rm ${TEMP}/tap-install-values-processed.yaml
+        ytt -f ${VALUES_FILE} -f ${SECRETS_HOME}/${TANZU_NET_CREDS} > ${TEMP}/tap-install-values-processed.yaml
+        tanzu package installed update tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file ${TEMP}/tap-install-values-processed.yaml -n tap-install
         ;;
 
     delete )
@@ -219,8 +223,8 @@ case $1 in
         ;;
     
     details )
-        #check that $2 exists
-        kubectl get app $2 -oyaml -n tap-install
+        #check that this works
+        ["$2"] && kubectl get app $2 -oyaml -n tap-install || echo "tap.sh details app_name"
         ;;
 
     * )

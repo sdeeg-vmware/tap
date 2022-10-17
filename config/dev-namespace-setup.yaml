@@ -13,9 +13,9 @@ kind: ServiceAccount
 metadata:
   name: default
 secrets:
-  - name: registry20-secret
+  - name: registry-secret
 imagePullSecrets:
-  - name: registry20-secret
+  - name: registry-secret
   - name: tap-registry
 ---
 apiVersion: rbac.authorization.k8s.io/v1

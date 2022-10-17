@@ -3,6 +3,9 @@
 
 **/archive*/
 **/gui/*
+**/downloads/
+**/tmp/
+**/.vscode/
 
 bin/
 cli/
