@@ -1,7 +1,7 @@
 shared:
   ingress_domain: "tap.tkgs.planet10.lab"
   image_registry:
-    project_path: "registry.planet10.lab/tap/build-service"
+    project_path: "registry.planet10.lab/tap"
     username: "tanzu"
     password: "Tanzu1!!"
   ca_cert_data: |
@@ -36,9 +36,9 @@ profile: full
 ceip_policy_disclosed: true
 
 buildservice:
-  kp_default_repository: "registry.planet10.lab/tap/build-service"
-  # kp_default_repository_username: "REGISTRY-USERNAME" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
-  # kp_default_repository_password: "REGISTRY-PASSWORD" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  kp_default_repository: "registry.planet10.lab/tap/buildservice"
+  kp_default_repository_username: "tanzu" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  kp_default_repository_password: "Tanzu1!!" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
   exclude_dependencies: true
 
 supply_chain: basic
@@ -53,9 +53,9 @@ contour:
       type: LoadBalancer
 
 ootb_supply_chain_basic:
-  # registry:
-  #     server: "SERVER-NAME" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
-  #     repository: "REPO-NAME" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  registry:
+      server: "registry.planet10.lab" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+      repository: "tap/supply-chain" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
   # gitops:
   #     ssh_secret: "SSH-SECRET"
   # maven:
@@ -120,3 +120,6 @@ metadata_store:
 grype:
   namespace: "grype" #! (optional) Defaults to default namespace.
   targetImagePullSecret: "registry-secret"
+
+excluded_packages:
+  - policy.apps.tanzu.vmware.com
