@@ -156,13 +156,13 @@ case $1 in
         exit 1
         ;;
 
-    reclocate-images | ri )
-        echo $(imgpkg --version | grep version)
-        RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}"
-        echo $RELOCATE_COMMAND
-        exec $RELOCATE_COMMAND
-        exit 1
-        ;;
+    # reclocate-images | ri )
+    #     echo $(imgpkg --version | grep version)
+    #     RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}"
+    #     echo $RELOCATE_COMMAND
+    #     exec $RELOCATE_COMMAND
+    #     exit 1
+    #     ;;
     
     create-cluster )
         [[ -f $TKG_UTIL/bin/create-cluster-timed.sh ]] && $TKG_UTIL/bin/create-cluster-timed.sh ${TAP_CLUSTER_NAME}
@@ -201,6 +201,18 @@ case $1 in
         kubectl create ns ${DEV_NAMESPACE}
         tanzu secret registry add registry-credentials --server ${REGISTRY_SERVER} --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD} --namespace ${DEV_NAMESPACE}
         kubectl apply -f config/dev-namespace-setup.yaml -n ${DEV_NAMESPACE}
+        ;;
+
+    install-tbs-full-deps | tbs-deps )
+        # echo $(imgpkg --version | grep version)
+        TBS_VERSION=$( tanzu package available list buildservice.tanzu.vmware.com --namespace tap-install  | grep buildservice | awk '{ print $2 }' )
+        echo "Relocating images for TBS version ${TBS_VERSION}"
+        # RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TBS_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}"
+        # echo $RELOCATE_COMMAND
+        # exec $RELOCATE_COMMAND
+        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/full-tbs-deps-package-repo:${TBS_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}
+        tanzu package repository add tbs-full-deps-repository --url ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}:${TBS_VERSION} --namespace tap-install
+        tanzu package install full-tbs-deps -p full-tbs-deps.tanzu.vmware.com -v ${TBS_VERSION} -n tap-install
         ;;
 
     update )
