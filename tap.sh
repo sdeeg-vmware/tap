@@ -18,16 +18,17 @@ export INSTALL_REGISTRY_USERNAME=tanzu
 export INSTALL_REGISTRY_PASSWORD=Tanzu1!!
 export TARGET_REPOSITORY=tap/tap-packages
 
+# Use these setting when installing fromm TanzuNet
+# export INSTALL_REGISTRY_HOSTNAME=registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
+# export INSTALL_REGISTRY_USERNAME=$TANZU_NET_USER
+# export INSTALL_REGISTRY_PASSWORD=$TANZU_NET_PASSWORD
+
 # Developer settings.
 export REGISTRY_SERVER=registry.planet10.lab
 export REGISTRY_USERNAME=tanzu
 export REGISTRY_PASSWORD=Tanzu1!!
 export DEV_NAMESPACE=development
-
-# Use these setting when installing fromm TanzuNet
-# export INSTALL_REGISTRY_HOSTNAME=registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
-# export INSTALL_REGISTRY_USERNAME=$TANZU_NET_USER
-# export INSTALL_REGISTRY_PASSWORD=$TANZU_NET_PASSWORD
+export PROJECT_REPOSITORY=tap/projects
 
 #weird setting for the tanzu cli (if everyone's supposed to do it, why isn't it the default?)
 export TANZU_CLI_NO_INIT=true
@@ -100,7 +101,7 @@ function install-tanzu-cli() {
         echo "sudo install $TANZU_CLI_HOME/cli/core/$version/tanzu-core-linux_amd64 /usr/local/bin/tanzu"
     fi
 
-    #Install plugins
+    #Install plugins ... do this even after init as that doesn't install everything
     #tanzu plugin install --local $TANZU_CLI_HOME/cli all
 }
 
@@ -108,12 +109,12 @@ function install-tanzu-cli() {
 #   --username ${INSTALL_REGISTRY_USERNAME} --password ${INSTALL_REGISTRY_PASSWORD} \
 #   --server ${INSTALL_REGISTRY_HOSTNAME} \
 #   --export-to-all-namespaces --yes --namespace tap-install
-function create-tap-registry-secret() {
-    tanzu secret registry add tap-registry \
-        --username ${TANZU_NET_USER} --password ${TANZU_NET_PASSWORD} \
-        --server registry.tanzu.vmware.com \
-        --export-to-all-namespaces --yes --namespace tap-install    
-}
+# function create-tap-registry-secret() {
+#     tanzu secret registry add tap-registry \
+#         --username ${TANZU_NET_USER} --password ${TANZU_NET_PASSWORD} \
+#         --server registry.tanzu.vmware.com \
+#         --export-to-all-namespaces --yes --namespace tap-install    
+# }
 
 function create-registry-secret() {
     tanzu secret registry add registry-secret \
