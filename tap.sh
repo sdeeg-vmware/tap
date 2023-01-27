@@ -2,7 +2,7 @@
 
 #######  Environment
 
-export TAP_VERSION=1.3.0
+export TAP_VERSION=1.3.2
 
 export TAP_DIR=$HOME/tap
 #export PATH=$TAP_DIR/bin:$PATH
@@ -157,13 +157,13 @@ case $1 in
         exit 1
         ;;
 
-    # reclocate-images | ri )
-    #     echo $(imgpkg --version | grep version)
-    #     RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}"
-    #     echo $RELOCATE_COMMAND
-    #     exec $RELOCATE_COMMAND
-    #     exit 1
-    #     ;;
+    reclocate-images | ri )
+        echo $(imgpkg --version | grep version)
+        RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY} --include-non-distributable-layers"
+        echo $RELOCATE_COMMAND
+        exec $RELOCATE_COMMAND
+        exit 1
+        ;;
     
     create-cluster )
         [[ -f $TKG_UTIL/bin/create-cluster-timed.sh ]] && $TKG_UTIL/bin/create-cluster-timed.sh ${TAP_CLUSTER_NAME}
