@@ -74,7 +74,7 @@ function validate-tap-env() {
         fi
     else
         echo "${TAP_CLUSTER_NAME} context exists.  Testing context ..."
-        if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME}-control-plane) ]]; then
+        if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME} | grep control-plane | grep Ready) ]]; then
             echo "lookup failed.  Logging in..."
             klogin ${TAP_CLUSTER_NAME}
         else
@@ -83,18 +83,18 @@ function validate-tap-env() {
     fi
 
     # Final test of context.  If it doesn't work here bail.
-    if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME}-control-plane) ]]; then
+    if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME} | grep control-plane | grep Ready) ]]; then
         echo "Context still not working.  Exiting."
-        exit 0
+        exit 1
     fi
 
     echo "Validated"
 }
 
 function ready_or_exit() {
-    if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME}-control-plane) ]]; then
+    if [[ ! $(kubectl get nodes | grep ${TAP_CLUSTER_NAME} | grep control-plane | grep Ready) ]]; then
         echo "We don't seem to be talking with the cluster ${TAP_CLUSTER_NAME}.  Exiting."
-        exit 0
+        exit 1
     fi
     echo "ready"
 }
@@ -105,7 +105,7 @@ function install-tanzu-cli() {
     local current_version=$( tanzu version | grep version | awk '{ print $2 }' )
     echo "Install Tanzu CLI:  found version $version (current version $current_version)"
     if [[ $version == $current_version ]]; then
-        echo "tanzu alreay at version available in $TANZU_CLI_HOME"
+        echo "tanzu already at version available in $TANZU_CLI_HOME"
     else
         sudo install $TANZU_CLI_HOME/cli/core/$version/tanzu-core-linux_amd64 /usr/local/bin/tanzu
         current_version=$( tanzu version | grep version | awk '{ print $2 }' )
@@ -174,7 +174,7 @@ case $1 in
         exit 0
         ;;
 
-    reclocate-images | ri )
+    relocate-images | ri )
         echo $(imgpkg --version | grep version)
         RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY} --include-non-distributable-layers"
         echo $RELOCATE_COMMAND
@@ -187,6 +187,7 @@ case $1 in
         exit 0
         ;;
 
+    # login to the cluster before doing this
     post-create-cluster-config | pccc )
         ready_or_exit
         #kubectl apply -f $TKG_UTIL/config/authorize-psp-for-service-accounts.yaml
