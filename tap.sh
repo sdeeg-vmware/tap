@@ -1,8 +1,17 @@
 #!/bin/bash
 
+### Assumptions
+#
+#   tanzu-cli has been downloaded and expanded into $TANZU_CLI_HOME
+#
+#   tanzu-cluster-essentials has already been downloaded and unpacked to $TKG_UTIL/downloads/tanzu-cluster-essentials
+#   the tce utils (imgpkg kbld kapp ytt) have been copied to $PATH (eg: /usr/local/bin)
+#
+#   You have done docker login for tanzu regisry and your private registry
+
 #######  Environment
 
-export TAP_VERSION=1.3.2
+export TAP_VERSION=1.5.0
 
 export TAP_DIR=$HOME/tap
 #export PATH=$TAP_DIR/bin:$PATH
@@ -36,7 +45,7 @@ export TANZU_CLI_NO_INIT=true
 export TANZU_CLI_HOME=$HOME/tanzu
 export TKG_UTIL=$HOME/tkg
 
-export VALUES_FILE=config/tap-values-1.3.yaml
+export VALUES_FILE=config/tap-values.yaml
 
 export TAP_CLUSTER_NAME=tap-cluster
 
@@ -98,11 +107,19 @@ function install-tanzu-cli() {
     if [[ $version == $current_version ]]; then
         echo "tanzu alreay at version available in $TANZU_CLI_HOME"
     else
-        echo "sudo install $TANZU_CLI_HOME/cli/core/$version/tanzu-core-linux_amd64 /usr/local/bin/tanzu"
+        sudo install $TANZU_CLI_HOME/cli/core/$version/tanzu-core-linux_amd64 /usr/local/bin/tanzu
+        current_version=$( tanzu version | grep version | awk '{ print $2 }' )
+        if [[ $version == $current_version ]]; then
+            echo "tanzu installed"
+            echo "installing plugins"
+            #Install plugins ... do this even after init as that doesn't install everything
+            tanzu plugin install --local $TANZU_CLI_HOME/cli all
+            echo "done with plugin install, listing"
+            tanzu plugin list
+        else
+            echo "tanzu cli version not at expected value ... something probably went wrong with the install :("
+        fi
     fi
-
-    #Install plugins ... do this even after init as that doesn't install everything
-    #tanzu plugin install --local $TANZU_CLI_HOME/cli all
 }
 
 # tanzu secret registry add tap-registry \
@@ -149,12 +166,12 @@ case $1 in
         else
             echo "Context seems to be working"
         fi
-        exit 1
+        exit 0
         ;;
         
     install-tanzu-cli )
         install-tanzu-cli
-        exit 1
+        exit 0
         ;;
 
     reclocate-images | ri )
@@ -162,20 +179,21 @@ case $1 in
         RELOCATE_COMMAND="imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY} --include-non-distributable-layers"
         echo $RELOCATE_COMMAND
         exec $RELOCATE_COMMAND
-        exit 1
+        exit 0
         ;;
     
     create-cluster )
         [[ -f $TKG_UTIL/bin/create-cluster-timed.sh ]] && $TKG_UTIL/bin/create-cluster-timed.sh ${TAP_CLUSTER_NAME}
-        exit 1
+        exit 0
         ;;
 
     post-create-cluster-config | pccc )
         ready_or_exit
-        kubectl apply -f $TKG_UTIL/config/authorize-psp-for-service-accounts.yaml
-        kubectl apply -f config/pod-security-policy.yaml
+        #kubectl apply -f $TKG_UTIL/config/authorize-psp-for-service-accounts.yaml
+        kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
+        #kubectl apply -f config/pod-security-policy.yaml
         $TKG_UTIL/bin/tce.sh install
-        exit 1
+        exit 0
         ;;
 esac
 

@@ -1,0 +1,125 @@
+shared:
+  ingress_domain: "tap.tkgs.planet10.lab"
+  image_registry:
+    project_path: "registry.planet10.lab/tap/projects"
+    username: "tanzu"
+    password: "Tanzu1!!"
+  ca_cert_data: |
+      -----BEGIN CERTIFICATE-----
+      MIIEejCCAuKgAwIBAgIRALGSvSBXsom49CViNWrlORswDQYJKoZIhvcNAQELBQAw
+      VTEeMBwGA1UEChMVbWtjZXJ0IGRldmVsb3BtZW50IENBMRUwEwYDVQQLDAxwaXZv
+      dGFsQHVkZXYxHDAaBgNVBAMME21rY2VydCBwaXZvdGFsQHVkZXYwHhcNMjAwNTI4
+      MTYxNzA3WhcNMzAwNTI4MTYxNzA3WjBVMR4wHAYDVQQKExVta2NlcnQgZGV2ZWxv
+      cG1lbnQgQ0ExFTATBgNVBAsMDHBpdm90YWxAdWRldjEcMBoGA1UEAwwTbWtjZXJ0
+      IHBpdm90YWxAdWRldjCCAaIwDQYJKoZIhvcNAQEBBQADggGPADCCAYoCggGBAMdZ
+      6GsfMbzEtKbtaSQ5NHZXxE/LnnY8kO5kMAc9tvG7xhKzCREehwqCvzau0wpuWCjU
+      6FZPFal6xA7ODyZmRfbHFDVdThiOh3WMjObEvmJURgi6QPlSpSbk0s2fNaG/kZDP
+      txHfQmraY4JPomHkuCsRJILhvj6RC2+pIPYdl6Pv9mJBxuZjK54oW7mQaJiWBvqW
+      OLUAPfNKyV9B+9HfHowKdL2nO2Qt0FYTLQ8HvpBH3Q3CgAtV6RBBePPg2iBd7TDW
+      PptevM000vqTa0fl4WtL7HH2v3JNyFOljo0tKAJgzymUQR3HJj9uFruSQWSjopty
+      XVT1w9sJjTewlj2lIi7FNz2DMZtWbJc6E39ajSz/rimQ2ycdnOIK7DsY/WeRzMhx
+      A4ooGq8g8wc+WpmRRaeXyjoI6n2IBT5hiSwjUV8SV2iI8J/jGcKDu6W+nuiWro7i
+      oYhnEkghy/l0TmVncSQ1OFCjv1dDyCnoTGDoXcG1vMsOUiGrotx2GvuJyyNixQID
+      AQABo0UwQzAOBgNVHQ8BAf8EBAMCAgQwEgYDVR0TAQH/BAgwBgEB/wIBADAdBgNV
+      HQ4EFgQUoG1RvUhOr3GCb6OmlG9xNH/7TkwwDQYJKoZIhvcNAQELBQADggGBAJ7u
+      WBisIOTd8TZDGUMvwJHdP0qJ/FJ/J3yq/L3DeMzpQfe2D96M0R6MJ2J1WK13PghK
+      tSxahV6ArGvygk9aN+7tJwy0P5mLTQOA+KN8HKROGkUML5HY6AA6nVnPJYUXo2nX
+      4Zdxx5FTBYntGIYowPNZpyMoWVBvqbxspGObXZYxLoKiBUeG5D26LzHyZS50wyca
+      tPeO1PjW52RS49neGAgeH+O+0BwkYTcWoAjUqrOjUHLXycOc2W7bBiQJaZSGvVmP
+      8Fxiqy2YO9WTowHrX91vHOyTAEnzhXoEcwivwo7SOTZomNzEyM8jnv5+ycT0Yg3a
+      qaJb3DYosEl0vkL/EkVL6wvbCp+w2rXJC0dGv67GB+XrF3gCgfdhuB+mSNawQs0m
+      lzRu26RBpZLHuFlft2LUY1plVmQrtDSdS+tAndXJ7t5CwHTE02kn3hlb8ZBbKObn
+      s/eKJFFm1xIMHYrAM5gk1WVieFnbGdxMZhbPUjM9CYAUAVVJh7NF3smKNVx5kQ==
+      -----END CERTIFICATE-----
+
+profile: full
+ceip_policy_disclosed: true
+
+buildservice:
+  kp_default_repository: "registry.planet10.lab/tap/build-service"
+  kp_default_repository_username: "tanzu" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  kp_default_repository_password: "Tanzu1!!" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  # exclude_dependencies: true
+
+supply_chain: basic
+
+scanning:
+  metadataStore:
+    url: ""
+
+contour:
+  envoy:
+    service:
+      type: LoadBalancer
+
+ootb_supply_chain_basic:
+  registry:
+      server: "registry.planet10.lab" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+      repository: "tap/projects" # Takes the value from the shared section above by default, but can be overridden by setting a different value.
+  # gitops:
+  #     ssh_secret: "SSH-SECRET"
+  # maven:
+  #     repository:
+  #        url: https://MAVEN-URL
+  #        secret_name: "MAVEN-CREDENTIALS"
+
+accelerator:
+  ingress:
+    include: true
+    enable_tls: false
+  # git_credentials:
+  #   secret_name: git-credentials
+  #   username: GITLAB-USER
+  #   password: GITLAB-PASSWORD
+
+appliveview:
+  ingressEnabled: true
+  # tls:
+  #   secretName: "SECRET-NAME"
+  #   namespace: "APP-LIVE-VIEW-NAMESPACE"
+
+appliveview_connector:
+  backend:
+    ingressEnabled: true
+    sslDisabled: true
+
+tap_gui:
+  service_type: ClusterIP
+  app_config:
+    # kubernetes:
+    #   serviceLocatorMethod:
+    #     type: multiTenant
+    #   clusterLocatorMethods:
+    #     - type: config
+    #       clusters:
+    #         - url: https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}
+    #           name: host
+    #           authProvider: serviceAccount
+    #           serviceAccountToken: ${KUBERNETES_SERVICE_ACCOUNT_TOKEN}
+    #           skipTLSVerify: false
+    #           caData: B64_ENCODED_CA
+    catalog:
+      locations:
+        - type: url
+          target: https://github.com/sdeeg-vmware/tap-gui-catalog/blob/master/catalog-info.yaml
+    #Example Integration for custom GitLab:
+    # integrations:
+    #   gitlab:
+    #     - host: GITLABURL
+    #       token: <GITLAB-TOKEN>
+    #       apiBaseUrl: https://GITLABURL/api/v4/
+    # backend:
+    #   reading:
+    #     allow:
+    #       - host: https://GIT-CATALOG-URL/catalog-info.yaml
+
+metadata_store:
+  # ns_for_export_app_cert: "MY-DEV-NAMESPACE"
+  app_service_type: ClusterIP
+
+grype:
+  namespace: "grype" #! (optional) Defaults to default namespace.
+  targetImagePullSecret: "registry-secret"
+
+excluded_packages:
+  - policy.apps.tanzu.vmware.com
