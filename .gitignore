@@ -2,13 +2,10 @@
 **/.ignore/*
 
 **/archive*/
-**/gui/*
+**/gui/
 **/downloads/
 **/tmp/
 **/.vscode/
-
-bin/
-cli/
 
 # files
 crash.log
@@ -16,5 +13,3 @@ crash.log
 *.tfstate.*
 
 scratch.sh
-
-tap-install-values-processed.yaml

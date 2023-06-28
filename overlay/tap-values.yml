@@ -1,0 +1,99 @@
+shared:
+  ingress_domain: "tap.tkgs.planet10.lab"
+  image_registry:
+    project_path: "overlay"
+    username: "overlay"
+    password: "overlay"
+  ca_cert_data: "overlay"
+
+profile: full
+ceip_policy_disclosed: true
+
+buildservice:
+  kp_default_repository: "overlay"
+  kp_default_repository_username: "overlay"
+  kp_default_repository_password: "overlay"
+  # exclude_dependencies: true
+
+supply_chain: basic
+
+scanning:
+  metadataStore:
+    url: ""
+
+contour:
+  envoy:
+    service:
+      type: LoadBalancer
+
+ootb_supply_chain_basic:
+  registry:
+      server: "overlay"
+      repository: "overlay"
+  # gitops:
+  #     ssh_secret: "SSH-SECRET"
+  # maven:
+  #     repository:
+  #        url: https://MAVEN-URL
+  #        secret_name: "MAVEN-CREDENTIALS"
+
+accelerator:
+  ingress:
+    include: true
+    enable_tls: false
+  # git_credentials:
+  #   secret_name: git-credentials
+  #   username: GITLAB-USER
+  #   password: GITLAB-PASSWORD
+
+appliveview:
+  ingressEnabled: true
+  # tls:
+  #   secretName: "SECRET-NAME"
+  #   namespace: "APP-LIVE-VIEW-NAMESPACE"
+
+appliveview_connector:
+  backend:
+    ingressEnabled: true
+    sslDisabled: true
+
+tap_gui:
+  service_type: ClusterIP
+  app_config:
+    # kubernetes:
+    #   serviceLocatorMethod:
+    #     type: multiTenant
+    #   clusterLocatorMethods:
+    #     - type: config
+    #       clusters:
+    #         - url: https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}
+    #           name: host
+    #           authProvider: serviceAccount
+    #           serviceAccountToken: ${KUBERNETES_SERVICE_ACCOUNT_TOKEN}
+    #           skipTLSVerify: false
+    #           caData: B64_ENCODED_CA
+    catalog:
+      locations:
+        - type: url
+          target: https://github.com/sdeeg-vmware/tap-gui-catalog/blob/master/catalog-info.yaml
+    #Example Integration for custom GitLab:
+    # integrations:
+    #   gitlab:
+    #     - host: GITLABURL
+    #       token: <GITLAB-TOKEN>
+    #       apiBaseUrl: https://GITLABURL/api/v4/
+    # backend:
+    #   reading:
+    #     allow:
+    #       - host: https://GIT-CATALOG-URL/catalog-info.yaml
+
+metadata_store:
+  # ns_for_export_app_cert: "MY-DEV-NAMESPACE"
+  app_service_type: ClusterIP
+
+grype:
+  namespace: "grype" # (optional) Defaults to default namespace.
+  targetImagePullSecret: "registry-secret"
+
+excluded_packages:
+  - policy.apps.tanzu.vmware.com

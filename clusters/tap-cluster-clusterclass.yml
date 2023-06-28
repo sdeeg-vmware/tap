@@ -1,0 +1,28 @@
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: tap-cluster
+spec:
+  clusterNetwork:
+    services:
+      cidrBlocks: ["198.51.100.0/12"]
+    pods:
+      cidrBlocks: ["192.0.2.0/16"]
+    serviceDomain: "cluster.local"
+  topology:
+    class: tanzukubernetescluster
+    version: v1.24.9---vmware.1-tkg.4 #v1.24.9+vmware.1-tkg.4
+    controlPlane:
+      replicas: 1
+    workers:
+      machineDeployments:
+        - class: node-pool
+          name: node-pool-1
+          replicas: 1
+    variables:
+      - name: vmClass
+        value: best-effort-medium
+      - name: storageClass
+        value: k8s-gold-storage-policy
+      - name: defaultStorageClass
+        value: k8s-gold-storage-policy

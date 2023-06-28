@@ -1,0 +1,13 @@
+#! tap-values-value-schema.yml
+#@data/values-schema
+---
+registry:
+  hostname: "default_host"
+  username: "default_user"
+  password: "default_pass"
+  tap_repository: "default_tap_repo"
+  buildservice_repository: "deafult_buildservice_repo"
+ca_cert_data: "default_cert"
+tanzunet:
+  username: "default_tanzunet_user"
+  password: "default_tanzunet_pass"

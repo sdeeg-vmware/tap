@@ -1,0 +1,8 @@
+#@data/values
+---
+registry:
+  hostname: registry.planet10.lab
+  username: tanzu
+  password: "Tanzu1!!"
+  tap_repository: "tap/projects"
+  buildservice_repository: tap/build-service

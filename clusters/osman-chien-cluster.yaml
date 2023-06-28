@@ -1,0 +1,53 @@
+apiVersion: run.tanzu.vmware.com/v1alpha3
+kind: TanzuKubernetesCluster
+metadata:
+  name: tkgs-tkc-01
+  namespace: tkgs-ns-01
+spec:
+  topology:
+    controlPlane:
+      replicas: 3
+      vmClass: guaranteed-tap-8-16
+      storageClass: tkgs-zonal-vm-storage-policy
+      tkr:
+        reference:
+          name: v1.24.9---vmware.1-tkg.4
+    nodePools:
+    - name: nodepool-01
+      replicas: 2
+      vmClass: guaranteed-tap-4-8
+      storageClass: tkgs-zonal-vm-storage-policy
+      failureDomain: zone-1
+      tkr:
+        reference:
+          name: v1.24.9---vmware.1-tkg.4
+    - name: nodepool-02
+      replicas: 2
+      vmClass: guaranteed-tap-4-8
+      storageClass: tkgs-zonal-vm-storage-policy
+      failureDomain: zone-2
+      tkr:
+        reference:
+          name: v1.24.9---vmware.1-tkg.4
+    - name: nodepool-03
+      replicas: 2
+      vmClass: guaranteed-tap-4-8
+      storageClass: tkgs-zonal-vm-storage-policy
+      failureDomain: zone-3
+      tkr:
+        reference:
+          name: v1.24.9---vmware.1-tkg.4
+  settings:
+    storage:
+      defaultClass: tkgs-zonal-vm-storage-policy
+    network:
+      cni:
+        name: antrea
+      services:
+        cidrBlocks: ["192.169.0.0/16"]
+      pods:
+        cidrBlocks: ["10.97.0.0/16"]
+      trust:
+        additionalTrustedCAs:
+          - name: tkgs-harbor-01.tanzu.lab
+            data: LS0tLS1...tLS0tLQo=

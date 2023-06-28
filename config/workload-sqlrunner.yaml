@@ -2,7 +2,7 @@ apiVersion: carto.run/v1alpha1
 kind: Workload
 metadata:
   name: sqlrunner
-  namespace: development
+  namespace: dev
   labels:
     app.kubernetes.io/part-of: sqlrunner
     apps.tanzu.vmware.com/workload-type: web
