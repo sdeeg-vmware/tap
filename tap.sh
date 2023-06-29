@@ -55,10 +55,10 @@ export TANZU_CLI_NO_INIT=true
 export TANZU_CLI_HOME=$HOME/tanzu
 export TKG_UTIL=$HOME/tkg
 
-TAP_VALUES_YTT=./config/tap-values.yml # With YTT annotations
+TAP_VALUES_FILE=./config/tap-values.yml # Generic yaml
+TAP_VALUES_OVERLAY=./config/tap-values-overlay.yml # YTT overlay for generic yaml
+TAP_VALUES_YTT=./config/tap-values-ytt.yml # With YTT annotations
 TAP_VALUES_SCHEMA=./config/tap-values-value-schema.yml # YTT Schema
-TAP_VALUES_FILE=./overlay/tap-values.yml # Generic yaml
-TAP_VALUES_OVERLAY=./overlay/tap-values-overlay.yml # YTT overlay for generic yaml
 TAP_VALUES_VALUE_FILES=./config-values/ # directory with values files (no ytt annotation)
 
 export TAP_CLUSTER_NAME=tap-cluster
