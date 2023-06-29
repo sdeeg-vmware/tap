@@ -20,11 +20,9 @@ export TAP_DIR=$HOME/tap
 TEMP=$TAP_DIR/tmp
 TEMP_TAP_VALUES=${TEMP}/tap-values.yml
 
-SECRETS_HOME=$HOME/.sekrits
-TANZU_NET_CREDS=tanzunet_creds.yml
+TANZU_NET_CREDS=$HOME/.sekrits/tanzunet_creds.yml
 
-CERTS_HOME=$HOME/certs
-ROOT_CA_FILE=rootCA.crt
+ROOT_CA_FILE=$HOME/certs/rootCA.crt
 
 #
 # Set the Repository where TAP will be pulled from.  This is
@@ -156,8 +154,8 @@ function run_ytt() {
     ytt -f $1 \
         -f $2 \
         -f $TAP_VALUES_VALUE_FILES \
-        --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-        --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS}
+        --data-value-file ca_cert_data=${ROOT_CA_FILE} \
+        --data-values-file ${TANZU_NET_CREDS}
 }
 #######  Main Entry
 
@@ -251,14 +249,10 @@ case $1 in
 
     install )
         echo "Installing TAP (version: ${TAP_VERSION})"
-        echo "tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${TEMP}/tap-values.yaml"
+        echo "tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${$TEMP_TAP_VALUES}"
         rm $TEMP_TAP_VALUES
-        ytt -f $TAP_VALUES_YTT \
-            -f $TAP_VALUES_SCHEMA \
-            -f $TAP_VALUES_VALUE_FILES \
-            --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-            --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS} > $TEMP_TAP_VALUES
-        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${TEMP}/tap-values.yaml
+        run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA > $TEMP_TAP_VALUES
+        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file $TEMP_TAP_VALUES
         ;;
 
     post-install-config | pic )
@@ -282,7 +276,7 @@ case $1 in
 
     update )
         rm ${TEMP}/tap-install-values-processed.yaml
-        ytt -f ${VALUES_FILE} -f ${SECRETS_HOME}/${TANZU_NET_CREDS} > ${TEMP}/tap-install-values-processed.yaml
+        ytt -f ${VALUES_FILE} -f ${TANZU_NET_CREDS} > ${TEMP}/tap-install.yml
         tanzu package installed update tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file ${TEMP}/tap-install-values-processed.yaml -n tap-install
         ;;
 
