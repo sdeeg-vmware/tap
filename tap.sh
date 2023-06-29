@@ -152,6 +152,13 @@ function setup_tap() {
         --namespace tap-install
 }
 
+function run_ytt() {
+    ytt -f $1 \
+        -f $2 \
+        -f $TAP_VALUES_VALUE_FILES \
+        --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
+        --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS}
+}
 #######  Main Entry
 
 # Pre-TAP install commands
@@ -169,44 +176,31 @@ case $1 in
     validate-tap-values | vtv )
         echo "validating the tap-values.yml ytt data processing"
         PLAIN=$(ytt -f tmp/tap-install-expected.yaml)
-        RESULT=$(ytt -f $TAP_VALUES_YTT \
-                     -f $TAP_VALUES_SCHEMA \
-                     -f $TAP_VALUES_VALUE_FILES \
-                     --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-                     --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS} )
+        RESULT=$(run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA )
         diff <(echo "${PLAIN}") <(echo "${RESULT}")
         exit 0
         ;;
     
     write-tap-values | wtv )
         echo "writing the tap-values.yml ytt data processing"
-        ytt -f $TAP_VALUES_YTT \
-            -f $TAP_VALUES_SCHEMA \
-            -f $TAP_VALUES_VALUE_FILES \
-            --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-            --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS} > $TEMP_TAP_VALUES
+        rm $TEMP_TAP_VALUES
+        run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA > $TEMP_TAP_VALUES
         exit 0
         ;;
     
     validate-tap-values-overlay | vtvo )
         echo "validating the tap-values.yml overlay processing"
         PLAIN=$(ytt -f tmp/tap-install-expected.yaml)
-        RESULT=$(ytt -f $TAP_VALUES_FILE \
-                     -f $TAP_VALUES_OVERLAY \
-                     -f $TAP_VALUES_VALUE_FILES \
-                     --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-                     --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS} )
+        RESULT=$(run_ytt $TAP_VALUES_FILE $TAP_VALUES_OVERLAY )
+
         diff <(echo "${PLAIN}") <(echo "${RESULT}")
         exit 0
         ;;
     
     write-tap-values-overlay | wtvo )
         echo "writing the tap-values.yml overlay processing"
-        ytt -f $TAP_VALUES_FILE \
-            -f $TAP_VALUES_OVERLAY \
-            -f $TAP_VALUES_VALUE_FILES \
-            --data-value-file ca_cert_data=${CERTS_HOME}/${ROOT_CA_FILE} \
-            --data-values-file  ${SECRETS_HOME}/${TANZU_NET_CREDS} > $TEMP_TAP_VALUES
+        rm $TEMP_TAP_VALUES
+        run_ytt $TAP_VALUES_FILE $TAP_VALUES_OVERLAY > $TEMP_TAP_VALUES
         exit 0
         ;;
     
