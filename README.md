@@ -5,4 +5,4 @@ the docs.
 
 It uses the tools in my TKG repository for cluster management.
 
-My target environment is vSphere 7 with TKGs.
+My target environment is vSphere 8 with TKGs.
