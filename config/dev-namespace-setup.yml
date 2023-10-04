@@ -1,0 +1,26 @@
+#! Assuning the namespace provisioner has been setup, this will create available namespaces to use for development
+#! Check that they get added to the ConfigMap "kubectl describe cm desired-namespaces -n tap-namespace-provisioning"
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: development
+    apps.tanzu.vmware.com/tap-ns: "development"
+  name: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: dev-project-2
+    apps.tanzu.vmware.com/tap-ns: "dev-project-2"
+  name: dev-project-2
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    kubernetes.io/metadata.name: dev-project-3
+    apps.tanzu.vmware.com/tap-ns: "dev-project-3"
+  name: dev-project-3

@@ -7,6 +7,9 @@ metadata:
   name: tanzu-java-web-app
   namespace: default
 spec:
+  - name: annotations
+    value:
+      autoscaling.knative.dev/minScale: "1"
   source:
     git:
       ref:

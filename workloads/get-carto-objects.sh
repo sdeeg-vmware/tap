@@ -1,1 +1,1 @@
-kubectl get cct,cd,cdt,cit,crt,cst,csc,ct,dlv,run,wld
+kubectl get cct,cd,cdt,cit,crt,cst,csc,ct,dlv,run,wld $1 $2 $3

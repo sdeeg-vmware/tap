@@ -7,6 +7,9 @@ metadata:
     app.kubernetes.io/part-of: sqlrunner
     apps.tanzu.vmware.com/workload-type: web
 spec:
+  - name: annotations
+    value:
+      autoscaling.knative.dev/minScale: "1"
   image: registry.planet10.lab/apps/sqlrunner:1.0
   # source:
   #   git:

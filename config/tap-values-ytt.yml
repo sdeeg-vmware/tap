@@ -9,17 +9,21 @@ shared:
   ingress_domain: "tap.tkgs.planet10.lab"
   image_registry:
     project_path: #@ host_path(data.values.registry.hostname, "tap/projects")
-    username: #@ data.values.registry.username
-    password: #@ data.values.registry.password
+    secret:
+      name: #@ data.values.registry.secret.name
+      namespace: #@ data.values.registry.secret.namespace
   ca_cert_data: #@ data.values.ca_cert_data
 
 profile: full
 ceip_policy_disclosed: true
 
+namespace_provisioner:
+  controller: true
+
 buildservice:
-  kp_default_repository: #@ host_path(data.values.registry.hostname, data.values.registry.buildservice_repository)
-  kp_default_repository_username: #@ data.values.registry.username
-  kp_default_repository_password: #@ data.values.registry.password
+  #! kp_default_repository: #@ host_path(data.values.registry.hostname, data.values.registry.buildservice_repository)
+  #! kp_default_repository_username: #@ data.values.registry.username
+  #! kp_default_repository_password: #@ data.values.registry.password
   #! exclude_dependencies: true
 
 supply_chain: basic
@@ -67,6 +71,17 @@ appliveview_connector:
 tap_gui:
   service_type: ClusterIP
   app_config:
+    auth:
+      environment: development
+      providers:
+        github:
+          development:
+            clientId: #@ data.values.auth.github.clientId
+            clientSecret: #@ data.values.auth.github.clientSecret
+        #! gitlab:
+        #!   development:
+        #!     clientId: #@ data.values.auth.gitlab.clientId
+        #!     clientSecret: #@ data.values.auth.gitlab.clientSecret
     #! kubernetes:
     #!   serviceLocatorMethod:
     #!     type: multiTenant

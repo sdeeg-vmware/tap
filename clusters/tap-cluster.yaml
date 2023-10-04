@@ -1,3 +1,7 @@
+#! v1.24.9---vmware.1-tkg.4
+#! v1.25.7---vmware.3-fips.1-tkg.1
+#! v1.26.5---vmware.2-fips.1-tkg.1
+
 apiVersion: run.tanzu.vmware.com/v1alpha2
 kind: TanzuKubernetesCluster
 metadata:
@@ -11,11 +15,11 @@ spec:
       storageClass: k8s-storage-policy
       tkr:  
         reference:
-          name: v1.24.9---vmware.1-tkg.4
+          name: v1.25.7---vmware.3-fips.1-tkg.1
     nodePools:
     - name: tap-worker-nodepool-a1
       replicas: 4
-      vmClass: best-effort-large
+      vmClass: best-effort-xlarge
       storageClass: k8s-storage-policy
       volumes:
         - name: containerd
@@ -24,7 +28,7 @@ spec:
             storage: 50Gi
       tkr:  
         reference:
-          name: v1.24.9---vmware.1-tkg.4
+          name: v1.25.7---vmware.3-fips.1-tkg.1
   settings:
     storage:
       defaultClass: k8s-storage-policy

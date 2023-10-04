@@ -3,11 +3,17 @@
 ---
 registry:
   hostname: "default_host"
-  username: "default_user"
-  password: "default_pass"
+  secret:
+    name: "default_name"
+    namespace: "default_namespace"
   tap_repository: "default_tap_repo"
   buildservice_repository: "deafult_buildservice_repo"
 ca_cert_data: "default_cert"
 tanzunet:
   username: "default_tanzunet_user"
   password: "default_tanzunet_pass"
+auth:
+  github:
+    callbackUrl: "default"
+    clientId: "default"
+    clientSecret: "default"

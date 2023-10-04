@@ -2,7 +2,8 @@
 ---
 registry:
   hostname: registry.planet10.lab
-  username: tanzu
-  password: "Tanzu1!!"
+  secret:
+    name: "registry-secret"
+    namespace: "tap-install"
   tap_repository: "tap/projects"
   buildservice_repository: tap/build-service

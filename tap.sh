@@ -11,18 +11,36 @@
 
 #######  Environment
 
+### From TAP docs
+# # Set tanzunet as the source registry to copy the Tanzu Application Platform packages from.
+# export IMGPKG_REGISTRY_HOSTNAME_0=registry.tanzu.vmware.com
+# export IMGPKG_REGISTRY_USERNAME_0=MY-TANZUNET-USERNAME
+# export IMGPKG_REGISTRY_PASSWORD_0=MY-TANZUNET-PASSWORD
+
+# # The user’s registry for copying the Tanzu Application Platform package to.
+# export IMGPKG_REGISTRY_HOSTNAME_1=MY-REGISTRY
+# export IMGPKG_REGISTRY_USERNAME_1=MY-REGISTRY-USER
+# export IMGPKG_REGISTRY_PASSWORD_1=MY-REGISTRY-PASSWORD
+# # These environment variables starting with IMGPKG_* are used by the imgpkg command only.
+
+# # The registry from which the Tanzu Application Platform package is retrieved.
+# export INSTALL_REGISTRY_USERNAME=”${IMGPKG_REGISTRY_USERNAME_1}”
+# export INSTALL_REGISTRY_PASSWORD=”${IMGPKG_REGISTRY_PASSWORD_1}”
+# export INSTALL_REGISTRY_HOSTNAME=”${IMGPKG_REGISTRY_HOSTNAME_1}”
+# export TAP_VERSION=VERSION-NUMBER
+# export INSTALL_REPO=TARGET-REPOSITORY
+
+# # The user’s registry used by Tanzu Application Platform to store built images and the Tanzu Build Service dependencies. These credentials must have write permission.
+# export MY_REGISTRY_USERNAME=”${IMGPKG_REGISTRY_USERNAME_1}” 
+# export MY_REGISTRY_PASSWORD=”${IMGPKG_REGISTRY_PASSWORD_1}” 
+# export MY_REGISTRY_HOSTNAME=”${IMGPKG_REGISTRY_HOSTNAME_1}”
+
 # TODO: Clean out exports!
 
-export TAP_VERSION=1.5.0
+TAP_VERSION=1.6.3
 
-export TAP_DIR=$HOME/tap
+TAP_DIR=$HOME/tap
 #export PATH=$TAP_DIR/bin:$PATH
-TEMP=$TAP_DIR/tmp
-TEMP_TAP_VALUES=${TEMP}/tap-values.yml
-
-TANZU_NET_CREDS=$HOME/.sekrits/tanzunet_creds.yml
-
-ROOT_CA_FILE=$HOME/certs/rootCA.crt
 
 #
 # Set the Repository where TAP will be pulled from.  This is
@@ -30,10 +48,10 @@ ROOT_CA_FILE=$HOME/certs/rootCA.crt
 #
 
 # Use these settings with installing from a local repository
-export INSTALL_REGISTRY_HOSTNAME=registry.planet10.lab
-export INSTALL_REGISTRY_USERNAME=tanzu
-export INSTALL_REGISTRY_PASSWORD=Tanzu1!!
-export TARGET_REPOSITORY=tap/tap-packages
+INSTALL_REGISTRY_HOSTNAME=registry.planet10.lab
+INSTALL_REGISTRY_USERNAME=tanzu
+INSTALL_REGISTRY_PASSWORD=Tanzu1!!
+TARGET_REPOSITORY=tap/tap-packages
 
 # Use these setting when installing fromm TanzuNet
 # export INSTALL_REGISTRY_HOSTNAME=registry.tanzu.vmware.com/tanzu-application-platform/tap-packages
@@ -41,23 +59,39 @@ export TARGET_REPOSITORY=tap/tap-packages
 # export INSTALL_REGISTRY_PASSWORD=
 
 # Developer settings.
-export REGISTRY_SERVER=registry.planet10.lab
-export REGISTRY_USERNAME=tanzu
-export REGISTRY_PASSWORD=Tanzu1!!
-export DEV_NAMESPACE=dev
-export PROJECT_REPOSITORY=tap/projects
+REGISTRY_SERVER=registry.planet10.lab
+REGISTRY_USERNAME=tanzu
+REGISTRY_PASSWORD=Tanzu1!!
+DEV_NAMESPACE=dev
+PROJECT_REPOSITORY=tap/projects
 
 #weird setting for the tanzu cli (if everyone's supposed to do it, why isn't it the default?)
 export TANZU_CLI_NO_INIT=true
 
-export TANZU_CLI_HOME=$HOME/tanzu
-export TKG_UTIL=$HOME/tkg
+TANZU_CLI_HOME=$HOME/tanzu
+TKG_UTIL=$HOME/tkg
 
-TAP_VALUES_FILE=./config/tap-values.yml # Generic yaml
-TAP_VALUES_OVERLAY=./config/tap-values-overlay.yml # YTT overlay for generic yaml
+TEMP=$TAP_DIR/tmp
+
+TAP_VALUES_SECRETS=$HOME/.sekrits/tap_ytt
+ROOT_CA_FILE=$HOME/certs/rootCA.crt
+
+# New/simpler env
 TAP_VALUES_YTT=./config/tap-values-ytt.yml # With YTT annotations
 TAP_VALUES_SCHEMA=./config/tap-values-value-schema.yml # YTT Schema
-TAP_VALUES_VALUE_FILES=./config-values/ # directory with values files (no ytt annotation)
+TAP_VALUES_VALUE_FILES=./config-values-ytt/ # directory with values files (no ytt annotation)
+
+TAP_VALUES_FILE_GENERIC=./config/tap-values.yml # Generic yaml
+TAP_VALUES_OVERLAY=./config/tap-values-overlay.yml # YTT overlay for generic yaml
+
+# These files are passed to ytt in run_ytt().  Default using ytt annotated base and schema
+TAP_VALUES_FILE=$TAP_VALUES_YTT
+TAP_VALUES_FILE_2=$TAP_VALUES_SCHEMA
+
+#TAP_VALUES_VALUE_FILES=./config-values/ # directory with values files (no ytt annotation)
+TEMP_TAP_VALUES=${TEMP}/tap-values.yml
+TAP_VALUES_EXPECTED=$HOME/.sekrits/tap-values-expected.yml
+[ -f "$TEMP/tap-values-expected.yml" ] && TAP_VALUES_EXPECTED=$TEMP/tap-values-expected.yml
 
 export TAP_CLUSTER_NAME=tap-cluster
 
@@ -135,8 +169,8 @@ function install-tanzu-cli() {
 }
 
 # Setup a newly created ${TAP_CLUSTER_NAME}
-function setup_tap() {
-    echo "Setting up for the tap install"
+function setup_cluster_for_tap() {
+    echo "Setting up the cluster for the tap install"
     kubectl create ns tap-install
     kubectl create ns grype
 
@@ -151,12 +185,13 @@ function setup_tap() {
 }
 
 function run_ytt() {
-    ytt -f $1 \
-        -f $2 \
+    ytt -f $TAP_VALUES_FILE \
+        -f $TAP_VALUES_FILE_2 \
         -f $TAP_VALUES_VALUE_FILES \
-        --data-value-file ca_cert_data=${ROOT_CA_FILE} \
-        --data-values-file ${TANZU_NET_CREDS}
+        -f $TAP_VALUES_SECRETS \
+        --data-value-file ca_cert_data=${ROOT_CA_FILE}
 }
+
 #######  Main Entry
 
 # Pre-TAP install commands
@@ -171,34 +206,51 @@ case $1 in
         exit 0
         ;;
     
+    run-ytt )
+        run_ytt
+        exit 0
+        ;;
+
     validate-tap-values | vtv )
-        echo "validating the tap-values.yml ytt data processing"
-        PLAIN=$(ytt -f tmp/tap-install-expected.yaml)
-        RESULT=$(run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA )
+        echo "validating ytt data processing of tap-values with expected $TAP_VALUES_EXPECTED"
+        PLAIN=$(ytt -f $TAP_VALUES_EXPECTED)
+        RESULT=$(run_ytt)
         diff <(echo "${PLAIN}") <(echo "${RESULT}")
+
+        # Or single line
+        # diff <(echo "$(ytt -f $TAP_VALUES_EXPECTED)") <(echo "$(run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA )")
+
         exit 0
         ;;
     
     write-tap-values | wtv )
-        echo "writing the tap-values.yml ytt data processing"
+        echo "writing ytt data processing of tap-values to $TEMP_TAP_VALUES"
         rm $TEMP_TAP_VALUES
-        run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA > $TEMP_TAP_VALUES
+        run_ytt > $TEMP_TAP_VALUES
         exit 0
         ;;
     
     validate-tap-values-overlay | vtvo )
-        echo "validating the tap-values.yml overlay processing"
-        PLAIN=$(ytt -f tmp/tap-install-expected.yaml)
-        RESULT=$(run_ytt $TAP_VALUES_FILE $TAP_VALUES_OVERLAY )
+        echo "validating ytt overlay processing of tap-values with expected $TAP_VALUES_EXPECTED"
+        PLAIN=$(ytt -f $TAP_VALUES_EXPECTED)
+
+        # Set to use overlay files
+        TAP_VALUES_FILE=$TAP_VALUES_FILE_GENERIC
+        TAP_VALUES_FILE_2=$TAP_VALUES_OVERLAY
+        RESULT=$(run_ytt)
 
         diff <(echo "${PLAIN}") <(echo "${RESULT}")
         exit 0
         ;;
     
     write-tap-values-overlay | wtvo )
-        echo "writing the tap-values.yml overlay processing"
+        echo "writing ytt overlay processing of tap-values to $TEMP_TAP_VALUES"
+
+        TAP_VALUES_FILE=$TAP_VALUES_FILE_GENERIC
+        TAP_VALUES_FILE_2=$TAP_VALUES_OVERLAY
+
         rm $TEMP_TAP_VALUES
-        run_ytt $TAP_VALUES_FILE $TAP_VALUES_OVERLAY > $TEMP_TAP_VALUES
+        run_ytt > $TEMP_TAP_VALUES
         exit 0
         ;;
     
@@ -221,7 +273,7 @@ case $1 in
         ;;
 
     # login to the cluster before doing this
-    post-create-cluster-config | pccc )
+    post-create-cluster-config | pccc | pcc )
         ready_or_exit
         #kubectl apply -f $TKG_UTIL/config/authorize-psp-for-service-accounts.yaml
         kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
@@ -242,24 +294,22 @@ validate-tap-env
 
 # TAP LCM
 case $1 in
-        
-    setup )
-        setup_tap
-        ;;
 
     install )
         echo "Installing TAP (version: ${TAP_VERSION})"
-        echo "tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${$TEMP_TAP_VALUES}"
+        echo "tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${TEMP_TAP_VALUES}"
+        setup_cluster_for_tap
         rm $TEMP_TAP_VALUES
-        run_ytt $TAP_VALUES_YTT $TAP_VALUES_SCHEMA > $TEMP_TAP_VALUES
-        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file $TEMP_TAP_VALUES
+        run_ytt > $TEMP_TAP_VALUES
+        tanzu package install tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} -n tap-install --values-file ${TEMP_TAP_VALUES}
+        exit 0
         ;;
 
     post-install-config | pic )
-        echo "Create the dev environment: namespace=${DEV_NAMESPACE}"
-        kubectl create ns ${DEV_NAMESPACE}
-        tanzu secret registry add registry-credentials --server ${REGISTRY_SERVER} --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD} --namespace ${DEV_NAMESPACE}
-        kubectl apply -f config/dev-namespace-setup.yaml -n ${DEV_NAMESPACE}
+        echo "Create the dev environments as defined in config/dev-namespace-setup.yml"
+        #tanzu secret registry add registry-credentials --server ${REGISTRY_SERVER} --username ${REGISTRY_USERNAME} --password ${REGISTRY_PASSWORD} --namespace ${DEV_NAMESPACE}
+        kubectl apply -f config/dev-namespace-setup.yml
+        exit 0
         ;;
 
     install-tbs-full-deps | tbs-deps )
@@ -272,30 +322,37 @@ case $1 in
         imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/full-tbs-deps-package-repo:${TBS_VERSION} --to-repo ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}
         tanzu package repository add tbs-full-deps-repository --url ${INSTALL_REGISTRY_HOSTNAME}/${TARGET_REPOSITORY}:${TBS_VERSION} --namespace tap-install
         tanzu package install full-tbs-deps -p full-tbs-deps.tanzu.vmware.com -v ${TBS_VERSION} -n tap-install
+        exit 0
         ;;
 
     update )
-        rm ${TEMP}/tap-install-values-processed.yaml
-        ytt -f ${VALUES_FILE} -f ${TANZU_NET_CREDS} > ${TEMP}/tap-install.yml
-        tanzu package installed update tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file ${TEMP}/tap-install-values-processed.yaml -n tap-install
+        echo "Updating TAP (version: ${TAP_VERSION})"
+        rm $TEMP_TAP_VALUES
+        run_ytt > $TEMP_TAP_VALUES
+        tanzu package installed update tap -p tap.tanzu.vmware.com -v ${TAP_VERSION} --values-file ${TEMP_TAP_VALUES} -n tap-install
+        exit 0
         ;;
 
     delete )
         tanzu package installed delete tap -n tap-install
+        exit 0
         ;;
 
     status )
         kubectl get packageinstall -n tap-install
         # tanzu package installed list -n tap-install
+        exit 0
         ;;
 
     watch )
         watch kubectl get packageinstall -n tap-install
+        exit 0
         ;;
     
     details )
         #check that this works
-        ["$2"] && kubectl get app $2 -oyaml -n tap-install || echo "tap.sh details app_name"
+        ["$2"] && kubectl get app $2 -o yaml -n tap-install || echo "tap.sh details app_name"
+        exit 0
         ;;
 
     * )
